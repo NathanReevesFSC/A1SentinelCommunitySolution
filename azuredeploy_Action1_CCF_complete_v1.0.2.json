@@ -1,0 +1,1049 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.2.0",
+  "metadata": {
+    "description": "Fresh stock-pattern Action1 Audit Events CCF community installer."
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Deployment location parameter retained for ARM template validation."
+      }
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Existing Log Analytics workspace enabled for Microsoft Sentinel."
+      }
+    },
+    "workspaceLocation": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Region of the existing Log Analytics workspace."
+      }
+    },
+    "tableRetentionInDays": {
+      "type": "int",
+      "defaultValue": 90,
+      "minValue": 4,
+      "maxValue": 730
+    },
+    "tableTotalRetentionInDays": {
+      "type": "int",
+      "defaultValue": 365,
+      "minValue": 4,
+      "maxValue": 4383
+    }
+  },
+  "variables": {
+    "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace'))]",
+    "tableName": "Action1AuditEvents_CL",
+    "streamName": "Custom-Action1AuditEventsRaw",
+    "dceName": "[concat('dce-action1-', uniqueString(variables('workspaceResourceId')))]",
+    "dcrName": "[concat('dcr-action1-audit-', uniqueString(variables('workspaceResourceId')))]",
+    "definitionContentId": "Action1AuditEventsCCFDefinition",
+    "connectionContentId": "Action1AuditEventsCCFConnections",
+    "connectorVersion": "1.0.2",
+    "solutionVersion": "1.0.2",
+    "solutionId": "azuresentinel.azure-sentinel-solution-action1-audit-events-ccf-v2",
+    "definitionTemplateName": "[concat(parameters('workspace'), '-dc-', uniqueString(variables('definitionContentId')))]",
+    "connectionTemplateName": "[concat(parameters('workspace'), '-rdc-', uniqueString(variables('connectionContentId')))]",
+    "solutionContentProductId": "[concat(substring(variables('solutionId'), 0, 50), '-sl-', uniqueString(concat(variables('solutionId'), '-Solution-', variables('solutionVersion'))))]",
+    "definitionContentProductId": "[concat(substring(variables('solutionId'), 0, 50), '-dc-', uniqueString(concat(variables('solutionId'), '-DataConnector-', variables('definitionContentId'), '-', variables('connectorVersion'))))]",
+    "connectionContentProductId": "[concat(substring(variables('solutionId'), 0, 50), '-rdc-', uniqueString(concat(variables('solutionId'), '-ResourcesDataConnector-', variables('connectionContentId'), '-', variables('connectorVersion'))))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/', variables('solutionId'))]",
+      "location": "[parameters('workspaceLocation')]",
+      "properties": {
+        "version": "[variables('solutionVersion')]",
+        "kind": "Solution",
+        "contentSchemaVersion": "3.0.0",
+        "contentId": "[variables('solutionId')]",
+        "parentId": "[variables('solutionId')]",
+        "source": {
+          "kind": "Solution",
+          "name": "Action1 Audit Events CCF v2",
+          "sourceId": "[variables('solutionId')]"
+        },
+        "author": {
+          "name": "Nathan Reeves, Community Project, www.nathanreeves.net"
+        },
+        "support": {
+          "name": "Nathan Reeves, Community Project, www.nathanreeves.net",
+          "tier": "Community"
+        },
+        "providers": [
+          "Nathan Reeves, Community Project, www.nathanreeves.net"
+        ],
+        "contentKind": "Solution",
+        "packageId": "[variables('solutionId')]",
+        "contentProductId": "[variables('solutionContentProductId')]",
+        "id": "[variables('solutionContentProductId')]",
+        "displayName": "Action1 Audit Events CCF v2",
+        "publisherDisplayName": "Nathan Reeves, Community Project, www.nathanreeves.net",
+        "descriptionHtml": "<p>Collect Action1 Audit Trail events with the Microsoft Sentinel Codeless Connector Framework.</p>",
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "[variables('connectionContentId')]",
+              "version": "[variables('connectorVersion')]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/dataCollectionEndpoints",
+      "apiVersion": "2024-03-11",
+      "name": "[variables('dceName')]",
+      "location": "[parameters('workspaceLocation')]",
+      "properties": {
+        "description": "Data collection endpoint used by the Action1 Audit Events CCF connector.",
+        "networkAcls": {
+          "publicNetworkAccess": "Enabled"
+        }
+      },
+      "tags": {
+        "Connector": "Action1 Audit Events",
+        "ConnectorVersion": "1.0.2"
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/tables",
+      "apiVersion": "2022-10-01",
+      "name": "[concat(parameters('workspace'), '/', variables('tableName'))]",
+      "properties": {
+        "plan": "Analytics",
+        "retentionInDays": "[parameters('tableRetentionInDays')]",
+        "totalRetentionInDays": "[parameters('tableTotalRetentionInDays')]",
+        "schema": {
+          "name": "[variables('tableName')]",
+          "displayName": "Action1 Audit Events",
+          "description": "Action1 Audit Trail events collected with the Microsoft Sentinel Codeless Connector Framework.",
+          "columns": [
+            {
+              "name": "TimeGenerated",
+              "type": "datetime"
+            },
+            {
+              "name": "Action1EventId",
+              "type": "string"
+            },
+            {
+              "name": "Action1RecordType",
+              "type": "string"
+            },
+            {
+              "name": "Action1EventUrl",
+              "type": "string"
+            },
+            {
+              "name": "EventName",
+              "type": "string"
+            },
+            {
+              "name": "EventCategory",
+              "type": "string"
+            },
+            {
+              "name": "HttpMethod",
+              "type": "string"
+            },
+            {
+              "name": "Description",
+              "type": "string"
+            },
+            {
+              "name": "Details",
+              "type": "dynamic"
+            },
+            {
+              "name": "ObjectName",
+              "type": "string"
+            },
+            {
+              "name": "ObjectUrl",
+              "type": "string"
+            },
+            {
+              "name": "ObjectPath",
+              "type": "string"
+            },
+            {
+              "name": "ResourceFamily",
+              "type": "string"
+            },
+            {
+              "name": "ActorUsername",
+              "type": "string"
+            },
+            {
+              "name": "ActorUserId",
+              "type": "string"
+            },
+            {
+              "name": "OrganizationId",
+              "type": "string"
+            },
+            {
+              "name": "OrganizationName",
+              "type": "string"
+            },
+            {
+              "name": "ScopeType",
+              "type": "string"
+            },
+            {
+              "name": "StatusMessage",
+              "type": "string"
+            },
+            {
+              "name": "SourceIpAddress",
+              "type": "string"
+            },
+            {
+              "name": "Action1Timestamp",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/dataCollectionRules",
+      "apiVersion": "2024-03-11",
+      "name": "[variables('dcrName')]",
+      "location": "[parameters('workspaceLocation')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('dceName'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces/tables', parameters('workspace'), variables('tableName'))]"
+      ],
+      "properties": {
+        "description": "Transforms native Action1 AuditEvent records into Action1AuditEvents_CL.",
+        "dataCollectionEndpointId": "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('dceName'))]",
+        "streamDeclarations": {
+          "Custom-Action1AuditEventsRaw": {
+            "columns": [
+              {
+                "name": "id",
+                "type": "string"
+              },
+              {
+                "name": "type",
+                "type": "string"
+              },
+              {
+                "name": "self",
+                "type": "string"
+              },
+              {
+                "name": "event",
+                "type": "string"
+              },
+              {
+                "name": "description",
+                "type": "string"
+              },
+              {
+                "name": "details",
+                "type": "dynamic"
+              },
+              {
+                "name": "object_name",
+                "type": "string"
+              },
+              {
+                "name": "object_url",
+                "type": "string"
+              },
+              {
+                "name": "user_name",
+                "type": "string"
+              },
+              {
+                "name": "user_id",
+                "type": "string"
+              },
+              {
+                "name": "timestamp",
+                "type": "string"
+              },
+              {
+                "name": "org_id",
+                "type": "string"
+              },
+              {
+                "name": "org_name",
+                "type": "string"
+              },
+              {
+                "name": "status_message",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "destinations": {
+          "logAnalytics": [
+            {
+              "workspaceResourceId": "[variables('workspaceResourceId')]",
+              "name": "Action1LogAnalytics"
+            }
+          ]
+        },
+        "dataFlows": [
+          {
+            "streams": [
+              "Custom-Action1AuditEventsRaw"
+            ],
+            "destinations": [
+              "Action1LogAnalytics"
+            ],
+            "transformKql": "source\n| extend Action1Timestamp = tostring(timestamp)\n| extend TimeGenerated = todatetime(strcat(\n    substring(Action1Timestamp, 0, 10),\n    \"T\",\n    substring(Action1Timestamp, 11, 2),\n    \":\",\n    substring(Action1Timestamp, 14, 2),\n    \":\",\n    substring(Action1Timestamp, 17, 2),\n    \"Z\"\n))\n| extend HttpMethod = iff(\n    toupper(tostring(event)) in (\"GET\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\"),\n    toupper(tostring(event)),\n    \"\"\n)\n| extend ObjectPath = tostring(split(tostring(object_url), \"?\")[0])\n| extend ResourceFamily = extract(@\"^/([^/?]+)\", 1, tostring(object_url))\n| extend ScopeType = iff(\n    tostring(org_id) == \"00000000-0000-0000-0000-000000000000\",\n    \"Enterprise\",\n    \"Organization\"\n)\n| extend SourceIpAddress = iff(\n    tostring(event) =~ \"Login\",\n    extract(@\"(?i)\\bfrom\\s+([0-9a-f:.]+)\\s*$\", 1, tostring(description)),\n    \"\"\n)\n| extend EventCategory = case(\n    tostring(event) =~ \"Login\",\n        \"Authentication\",\n    tostring(event) in~ (\"Remote Connect\", \"Remote Disconnect\"),\n        \"RemoteAccess\",\n    tostring(event) =~ \"Create User\"\n        or ObjectPath startswith \"/users\"\n        or ObjectPath startswith \"/roles\"\n        or ObjectPath startswith \"/permissions\",\n        \"IdentityManagement\",\n    tostring(event) in~ (\"View Report\", \"Export Report\", \"Search\")\n        or ObjectPath startswith \"/reportdata\",\n        \"DataAccess\",\n    tostring(event) in~ (\"Download Agent\", \"Download Deployer\"),\n        \"AgentDistribution\",\n    tostring(event) =~ \"Create SoftwareRepositoryPackage\",\n        \"PackageManagement\",\n    ObjectPath startswith \"/automations\",\n        \"Automation\",\n    ObjectPath startswith \"/endpoints\",\n        \"EndpointManagement\",\n    HttpMethod in (\"POST\", \"PUT\", \"PATCH\", \"DELETE\"),\n        \"ConfigurationChange\",\n    HttpMethod == \"GET\",\n        \"ReadOnlyApiActivity\",\n    \"Other\"\n)\n| project\n    TimeGenerated,\n    Action1EventId = tostring(id),\n    Action1RecordType = tostring(type),\n    Action1EventUrl = tostring(self),\n    EventName = tostring(event),\n    EventCategory,\n    HttpMethod,\n    Description = tostring(description),\n    Details = details,\n    ObjectName = tostring(object_name),\n    ObjectUrl = tostring(object_url),\n    ObjectPath,\n    ResourceFamily,\n    ActorUsername = tostring(user_name),\n    ActorUserId = tostring(user_id),\n    OrganizationId = tostring(org_id),\n    OrganizationName = tostring(org_name),\n    ScopeType,\n    StatusMessage = tostring(status_message),\n    SourceIpAddress,\n    Action1Timestamp",
+            "outputStream": "Custom-Action1AuditEvents_CL"
+          }
+        ]
+      },
+      "tags": {
+        "Connector": "Action1 Audit Events",
+        "ConnectorVersion": "1.0.2"
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentTemplates",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/', variables('definitionTemplateName'), variables('connectorVersion'))]",
+      "location": "[parameters('workspaceLocation')]",
+      "dependsOn": [
+        "[extensionResourceId(variables('workspaceResourceId'), 'Microsoft.SecurityInsights/contentPackages', variables('solutionId'))]",
+        "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('dceName'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces/tables', parameters('workspace'), variables('tableName'))]",
+        "[resourceId('Microsoft.Insights/dataCollectionRules', variables('dcrName'))]"
+      ],
+      "properties": {
+        "contentId": "[variables('definitionContentId')]",
+        "displayName": "Action1 Audit Events",
+        "description": "Installs the Action1 connector definition, custom table, DCE, and DCR.",
+        "contentKind": "DataConnector",
+        "mainTemplate": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "[variables('connectorVersion')]",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "type": "Microsoft.Insights/dataCollectionEndpoints",
+              "apiVersion": "2024-03-11",
+              "name": "[variables('dceName')]",
+              "location": "[parameters('workspaceLocation')]",
+              "properties": {
+                "description": "Data collection endpoint used by the Action1 Audit Events CCF connector.",
+                "networkAcls": {
+                  "publicNetworkAccess": "Enabled"
+                }
+              },
+              "tags": {
+                "Connector": "Action1 Audit Events",
+                "ConnectorVersion": "1.0.2"
+              }
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces/tables",
+              "apiVersion": "2022-10-01",
+              "name": "[variables('tableName')]",
+              "properties": {
+                "plan": "Analytics",
+                "retentionInDays": "[parameters('tableRetentionInDays')]",
+                "totalRetentionInDays": "[parameters('tableTotalRetentionInDays')]",
+                "schema": {
+                  "name": "[variables('tableName')]",
+                  "displayName": "Action1 Audit Events",
+                  "description": "Action1 Audit Trail events collected with the Microsoft Sentinel Codeless Connector Framework.",
+                  "columns": [
+                    {
+                      "name": "TimeGenerated",
+                      "type": "datetime"
+                    },
+                    {
+                      "name": "Action1EventId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "Action1RecordType",
+                      "type": "string"
+                    },
+                    {
+                      "name": "Action1EventUrl",
+                      "type": "string"
+                    },
+                    {
+                      "name": "EventName",
+                      "type": "string"
+                    },
+                    {
+                      "name": "EventCategory",
+                      "type": "string"
+                    },
+                    {
+                      "name": "HttpMethod",
+                      "type": "string"
+                    },
+                    {
+                      "name": "Description",
+                      "type": "string"
+                    },
+                    {
+                      "name": "Details",
+                      "type": "dynamic"
+                    },
+                    {
+                      "name": "ObjectName",
+                      "type": "string"
+                    },
+                    {
+                      "name": "ObjectUrl",
+                      "type": "string"
+                    },
+                    {
+                      "name": "ObjectPath",
+                      "type": "string"
+                    },
+                    {
+                      "name": "ResourceFamily",
+                      "type": "string"
+                    },
+                    {
+                      "name": "ActorUsername",
+                      "type": "string"
+                    },
+                    {
+                      "name": "ActorUserId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "OrganizationId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "OrganizationName",
+                      "type": "string"
+                    },
+                    {
+                      "name": "ScopeType",
+                      "type": "string"
+                    },
+                    {
+                      "name": "StatusMessage",
+                      "type": "string"
+                    },
+                    {
+                      "name": "SourceIpAddress",
+                      "type": "string"
+                    },
+                    {
+                      "name": "Action1Timestamp",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Insights/dataCollectionRules",
+              "apiVersion": "2024-03-11",
+              "name": "[variables('dcrName')]",
+              "location": "[parameters('workspaceLocation')]",
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('dceName'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces/tables', parameters('workspace'), variables('tableName'))]"
+              ],
+              "properties": {
+                "description": "Transforms native Action1 AuditEvent records into Action1AuditEvents_CL.",
+                "dataCollectionEndpointId": "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('dceName'))]",
+                "streamDeclarations": {
+                  "Custom-Action1AuditEventsRaw": {
+                    "columns": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "type",
+                        "type": "string"
+                      },
+                      {
+                        "name": "self",
+                        "type": "string"
+                      },
+                      {
+                        "name": "event",
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      },
+                      {
+                        "name": "details",
+                        "type": "dynamic"
+                      },
+                      {
+                        "name": "object_name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "object_url",
+                        "type": "string"
+                      },
+                      {
+                        "name": "user_name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "user_id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "timestamp",
+                        "type": "string"
+                      },
+                      {
+                        "name": "org_id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "org_name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status_message",
+                        "type": "string"
+                      }
+                    ]
+                  }
+                },
+                "destinations": {
+                  "logAnalytics": [
+                    {
+                      "workspaceResourceId": "[variables('workspaceResourceId')]",
+                      "name": "Action1LogAnalytics"
+                    }
+                  ]
+                },
+                "dataFlows": [
+                  {
+                    "streams": [
+                      "Custom-Action1AuditEventsRaw"
+                    ],
+                    "destinations": [
+                      "Action1LogAnalytics"
+                    ],
+                    "transformKql": "source\n| extend Action1Timestamp = tostring(timestamp)\n| extend TimeGenerated = todatetime(strcat(\n    substring(Action1Timestamp, 0, 10),\n    \"T\",\n    substring(Action1Timestamp, 11, 2),\n    \":\",\n    substring(Action1Timestamp, 14, 2),\n    \":\",\n    substring(Action1Timestamp, 17, 2),\n    \"Z\"\n))\n| extend HttpMethod = iff(\n    toupper(tostring(event)) in (\"GET\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\"),\n    toupper(tostring(event)),\n    \"\"\n)\n| extend ObjectPath = tostring(split(tostring(object_url), \"?\")[0])\n| extend ResourceFamily = extract(@\"^/([^/?]+)\", 1, tostring(object_url))\n| extend ScopeType = iff(\n    tostring(org_id) == \"00000000-0000-0000-0000-000000000000\",\n    \"Enterprise\",\n    \"Organization\"\n)\n| extend SourceIpAddress = iff(\n    tostring(event) =~ \"Login\",\n    extract(@\"(?i)\\bfrom\\s+([0-9a-f:.]+)\\s*$\", 1, tostring(description)),\n    \"\"\n)\n| extend EventCategory = case(\n    tostring(event) =~ \"Login\",\n        \"Authentication\",\n    tostring(event) in~ (\"Remote Connect\", \"Remote Disconnect\"),\n        \"RemoteAccess\",\n    tostring(event) =~ \"Create User\"\n        or ObjectPath startswith \"/users\"\n        or ObjectPath startswith \"/roles\"\n        or ObjectPath startswith \"/permissions\",\n        \"IdentityManagement\",\n    tostring(event) in~ (\"View Report\", \"Export Report\", \"Search\")\n        or ObjectPath startswith \"/reportdata\",\n        \"DataAccess\",\n    tostring(event) in~ (\"Download Agent\", \"Download Deployer\"),\n        \"AgentDistribution\",\n    tostring(event) =~ \"Create SoftwareRepositoryPackage\",\n        \"PackageManagement\",\n    ObjectPath startswith \"/automations\",\n        \"Automation\",\n    ObjectPath startswith \"/endpoints\",\n        \"EndpointManagement\",\n    HttpMethod in (\"POST\", \"PUT\", \"PATCH\", \"DELETE\"),\n        \"ConfigurationChange\",\n    HttpMethod == \"GET\",\n        \"ReadOnlyApiActivity\",\n    \"Other\"\n)\n| project\n    TimeGenerated,\n    Action1EventId = tostring(id),\n    Action1RecordType = tostring(type),\n    Action1EventUrl = tostring(self),\n    EventName = tostring(event),\n    EventCategory,\n    HttpMethod,\n    Description = tostring(description),\n    Details = details,\n    ObjectName = tostring(object_name),\n    ObjectUrl = tostring(object_url),\n    ObjectPath,\n    ResourceFamily,\n    ActorUsername = tostring(user_name),\n    ActorUserId = tostring(user_id),\n    OrganizationId = tostring(org_id),\n    OrganizationName = tostring(org_name),\n    ScopeType,\n    StatusMessage = tostring(status_message),\n    SourceIpAddress,\n    Action1Timestamp",
+                    "outputStream": "Custom-Action1AuditEvents_CL"
+                  }
+                ]
+              },
+              "tags": {
+                "Connector": "Action1 Audit Events",
+                "ConnectorVersion": "1.0.2"
+              }
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectorDefinitions",
+              "apiVersion": "2022-09-01-preview",
+              "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/', variables('definitionContentId'))]",
+              "location": "[parameters('workspaceLocation')]",
+              "kind": "Customizable",
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/dataCollectionRules', variables('dcrName'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces/tables', parameters('workspace'), variables('tableName'))]"
+              ],
+              "properties": {
+                "connectorUiConfig": {
+                  "id": "Action1AuditEventsCCFDefinition",
+                  "title": "Action1 Audit Events",
+                  "publisher": "Nathan Reeves, Community Project, www.nathanreeves.net",
+                  "descriptionMarkdown": "The **Action1 Audit Events** connector collects Action1 Audit Trail records through the Action1 REST API and ingests them into `Action1AuditEvents_CL`.",
+                  "graphQueriesTableName": "Action1AuditEvents_CL",
+                  "graphQueries": [
+                    {
+                      "metricName": "Total events received",
+                      "legend": "Action1 audit events",
+                      "baseQuery": "{{graphQueriesTableName}}"
+                    }
+                  ],
+                  "sampleQueries": [
+                    {
+                      "description": "Latest Action1 audit events",
+                      "query": "{{graphQueriesTableName}}\n| sort by TimeGenerated desc\n| take 50"
+                    }
+                  ],
+                  "dataTypes": [
+                    {
+                      "name": "{{graphQueriesTableName}}",
+                      "lastDataReceivedQuery": "{{graphQueriesTableName}}\n| summarize Time = max(TimeGenerated)\n| where isnotempty(Time)"
+                    }
+                  ],
+                  "connectivityCriteria": [
+                    {
+                      "type": "HasDataConnectors"
+                    }
+                  ],
+                  "availability": {
+                    "status": 1,
+                    "isPreview": true
+                  },
+                  "permissions": {
+                    "resourceProvider": [
+                      {
+                        "provider": "Microsoft.OperationalInsights/workspaces",
+                        "permissionsDisplayText": "Read and write permissions are required.",
+                        "providerDisplayName": "Workspace",
+                        "scope": "Workspace",
+                        "requiredPermissions": {
+                          "read": true,
+                          "write": true,
+                          "delete": true
+                        }
+                      }
+                    ],
+                    "customs": [
+                      {
+                        "name": "Action1 API credential",
+                        "description": "An Action1 API credential with permission to view the Audit Trail is required."
+                      }
+                    ]
+                  },
+                  "instructionSteps": [
+                    {
+                      "title": "Connect Action1 to Microsoft Sentinel",
+                      "description": "Provide the Action1 API base URL, client ID, and client secret, then select Connect.",
+                      "instructions": [
+                        {
+                          "type": "Textbox",
+                          "parameters": {
+                            "label": "Action1 API base URL",
+                            "placeholder": "https://app.action1.com/api/3.0",
+                            "type": "text",
+                            "name": "urlStub"
+                          }
+                        },
+                        {
+                          "type": "Textbox",
+                          "parameters": {
+                            "label": "Action1 Client ID",
+                            "placeholder": "Enter the Action1 client ID",
+                            "type": "text",
+                            "name": "clientId"
+                          }
+                        },
+                        {
+                          "type": "Textbox",
+                          "parameters": {
+                            "label": "Action1 Client Secret",
+                            "placeholder": "Enter the Action1 client secret",
+                            "type": "password",
+                            "name": "clientSecret"
+                          }
+                        },
+                        {
+                          "type": "ConnectionToggleButton",
+                          "parameters": {
+                            "connectLabel": "Connect",
+                            "name": "connect"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces/providers/metadata",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/DataConnector-', variables('definitionContentId'))]",
+              "dependsOn": [
+                "[extensionResourceId(variables('workspaceResourceId'), 'Microsoft.SecurityInsights/dataConnectorDefinitions', variables('definitionContentId'))]"
+              ],
+              "properties": {
+                "parentId": "[extensionResourceId(variables('workspaceResourceId'), 'Microsoft.SecurityInsights/dataConnectorDefinitions', variables('definitionContentId'))]",
+                "contentId": "[variables('definitionContentId')]",
+                "kind": "DataConnector",
+                "version": "[variables('connectorVersion')]",
+                "source": {
+                  "kind": "Solution",
+                  "name": "Action1 Audit Events CCF v2",
+                  "sourceId": "[variables('solutionId')]"
+                },
+                "author": {
+                  "name": "Nathan Reeves, Community Project, www.nathanreeves.net"
+                },
+                "support": {
+                  "name": "Nathan Reeves, Community Project, www.nathanreeves.net",
+                  "tier": "Community"
+                },
+                "dependencies": {
+                  "criteria": [
+                    {
+                      "version": "[variables('connectorVersion')]",
+                      "contentId": "[variables('connectionContentId')]",
+                      "kind": "ResourcesDataConnector"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "packageKind": "Solution",
+        "packageVersion": "[variables('solutionVersion')]",
+        "packageName": "Action1 Audit Events CCF v2",
+        "contentProductId": "[variables('definitionContentProductId')]",
+        "packageId": "[variables('solutionId')]",
+        "contentSchemaVersion": "3.0.0",
+        "version": "[variables('connectorVersion')]"
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectorDefinitions",
+      "apiVersion": "2022-09-01-preview",
+      "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/', variables('definitionContentId'))]",
+      "location": "[parameters('workspaceLocation')]",
+      "kind": "Customizable",
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/dataCollectionRules', variables('dcrName'))]",
+        "[resourceId('Microsoft.OperationalInsights/workspaces/tables', parameters('workspace'), variables('tableName'))]",
+        "[extensionResourceId(variables('workspaceResourceId'), 'Microsoft.SecurityInsights/contentTemplates', concat(variables('definitionTemplateName'), variables('connectorVersion')))]"
+      ],
+      "properties": {
+        "connectorUiConfig": {
+          "id": "Action1AuditEventsCCFDefinition",
+          "title": "Action1 Audit Events",
+          "publisher": "Nathan Reeves, Community Project, www.nathanreeves.net",
+          "descriptionMarkdown": "The **Action1 Audit Events** connector collects Action1 Audit Trail records through the Action1 REST API and ingests them into `Action1AuditEvents_CL`.",
+          "graphQueriesTableName": "Action1AuditEvents_CL",
+          "graphQueries": [
+            {
+              "metricName": "Total events received",
+              "legend": "Action1 audit events",
+              "baseQuery": "{{graphQueriesTableName}}"
+            }
+          ],
+          "sampleQueries": [
+            {
+              "description": "Latest Action1 audit events",
+              "query": "{{graphQueriesTableName}}\n| sort by TimeGenerated desc\n| take 50"
+            }
+          ],
+          "dataTypes": [
+            {
+              "name": "{{graphQueriesTableName}}",
+              "lastDataReceivedQuery": "{{graphQueriesTableName}}\n| summarize Time = max(TimeGenerated)\n| where isnotempty(Time)"
+            }
+          ],
+          "connectivityCriteria": [
+            {
+              "type": "HasDataConnectors"
+            }
+          ],
+          "availability": {
+            "status": 1,
+            "isPreview": true
+          },
+          "permissions": {
+            "resourceProvider": [
+              {
+                "provider": "Microsoft.OperationalInsights/workspaces",
+                "permissionsDisplayText": "Read and write permissions are required.",
+                "providerDisplayName": "Workspace",
+                "scope": "Workspace",
+                "requiredPermissions": {
+                  "read": true,
+                  "write": true,
+                  "delete": true
+                }
+              }
+            ],
+            "customs": [
+              {
+                "name": "Action1 API credential",
+                "description": "An Action1 API credential with permission to view the Audit Trail is required."
+              }
+            ]
+          },
+          "instructionSteps": [
+            {
+              "title": "Connect Action1 to Microsoft Sentinel",
+              "description": "Provide the Action1 API base URL, client ID, and client secret, then select Connect.",
+              "instructions": [
+                {
+                  "type": "Textbox",
+                  "parameters": {
+                    "label": "Action1 API base URL",
+                    "placeholder": "https://app.action1.com/api/3.0",
+                    "type": "text",
+                    "name": "urlStub"
+                  }
+                },
+                {
+                  "type": "Textbox",
+                  "parameters": {
+                    "label": "Action1 Client ID",
+                    "placeholder": "Enter the Action1 client ID",
+                    "type": "text",
+                    "name": "clientId"
+                  }
+                },
+                {
+                  "type": "Textbox",
+                  "parameters": {
+                    "label": "Action1 Client Secret",
+                    "placeholder": "Enter the Action1 client secret",
+                    "type": "password",
+                    "name": "clientSecret"
+                  }
+                },
+                {
+                  "type": "ConnectionToggleButton",
+                  "parameters": {
+                    "connectLabel": "Connect",
+                    "name": "connect"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/metadata",
+      "apiVersion": "2022-01-01-preview",
+      "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/DataConnector-', variables('definitionContentId'))]",
+      "dependsOn": [
+        "[extensionResourceId(variables('workspaceResourceId'), 'Microsoft.SecurityInsights/dataConnectorDefinitions', variables('definitionContentId'))]"
+      ],
+      "properties": {
+        "parentId": "[extensionResourceId(variables('workspaceResourceId'), 'Microsoft.SecurityInsights/dataConnectorDefinitions', variables('definitionContentId'))]",
+        "contentId": "[variables('definitionContentId')]",
+        "kind": "DataConnector",
+        "version": "[variables('connectorVersion')]",
+        "source": {
+          "kind": "Solution",
+          "name": "Action1 Audit Events CCF v2",
+          "sourceId": "[variables('solutionId')]"
+        },
+        "author": {
+          "name": "Nathan Reeves, Community Project, www.nathanreeves.net"
+        },
+        "support": {
+          "name": "Nathan Reeves, Community Project, www.nathanreeves.net",
+          "tier": "Community"
+        },
+        "dependencies": {
+          "criteria": [
+            {
+              "version": "[variables('connectorVersion')]",
+              "contentId": "[variables('connectionContentId')]",
+              "kind": "ResourcesDataConnector"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentTemplates",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/', variables('connectionTemplateName'), variables('connectorVersion'))]",
+      "location": "[parameters('workspaceLocation')]",
+      "dependsOn": [
+        "[extensionResourceId(variables('workspaceResourceId'), 'Microsoft.SecurityInsights/contentPackages', variables('solutionId'))]",
+        "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('dceName'))]",
+        "[resourceId('Microsoft.Insights/dataCollectionRules', variables('dcrName'))]"
+      ],
+      "properties": {
+        "contentId": "[variables('connectionContentId')]",
+        "displayName": "Action1 Audit Events connection",
+        "description": "Creates an Action1 RestApiPoller connection.",
+        "contentKind": "ResourcesDataConnector",
+        "mainTemplate": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "[variables('connectorVersion')]",
+          "parameters": {
+            "workspaceName": {
+              "type": "string",
+              "defaultValue": "[parameters('workspace')]"
+            },
+            "workspaceLocation": {
+              "type": "string",
+              "defaultValue": "[parameters('workspaceLocation')]"
+            },
+            "connectorDefinitionName": {
+              "type": "string",
+              "defaultValue": "Action1AuditEventsCCFDefinition",
+              "minLength": 1
+            },
+            "dcrConfig": {
+              "type": "object",
+              "defaultValue": {
+                "dataCollectionEndpoint": "[reference(resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('dceName')), '2024-03-11', 'Full').properties.logsIngestion.endpoint]",
+                "dataCollectionRuleImmutableId": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('dcrName')), '2024-03-11', 'Full').properties.immutableId]"
+              }
+            },
+            "urlStub": {
+              "type": "string",
+              "minLength": 1
+            },
+            "clientId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "clientSecret": {
+              "type": "securestring",
+              "minLength": 1
+            }
+          },
+          "variables": {
+            "normalizedUrlStub": "[[if(endsWith(parameters('urlStub'), '/'), substring(parameters('urlStub'), 0, sub(length(parameters('urlStub')), 1)), parameters('urlStub'))]",
+            "connectionResourceName": "[[concat('Action1AuditEventsV2-', uniqueString(parameters('urlStub'), parameters('clientId')))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces/providers/metadata",
+              "apiVersion": "2022-01-01-preview",
+              "name": "[concat(parameters('workspace'), '/Microsoft.SecurityInsights/DataConnector-', variables('connectionContentId'))]",
+              "properties": {
+                "parentId": "[extensionResourceId(resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspace')), 'Microsoft.SecurityInsights/dataConnectors', variables('connectionContentId'))]",
+                "contentId": "Action1AuditEventsCCFConnections",
+                "kind": "ResourcesDataConnector",
+                "version": "1.0.2",
+                "source": {
+                  "kind": "Solution",
+                  "name": "Action1 Audit Events CCF v2",
+                  "sourceId": "azuresentinel.azure-sentinel-solution-action1-audit-events-ccf-v2"
+                },
+                "author": {
+                  "name": "Nathan Reeves, Community Project, www.nathanreeves.net"
+                },
+                "support": {
+                  "name": "Nathan Reeves, Community Project, www.nathanreeves.net",
+                  "tier": "Community"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectors",
+              "apiVersion": "2023-02-01-preview",
+              "name": "[[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/', variables('connectionResourceName'))]",
+              "location": "[[parameters('workspaceLocation')]",
+              "kind": "RestApiPoller",
+              "properties": {
+                "connectorDefinitionName": "Action1AuditEventsCCFDefinition",
+                "dataType": "Action1AuditEvents_CL",
+                "dcrConfig": {
+                  "streamName": "Custom-Action1AuditEventsRaw",
+                  "dataCollectionEndpoint": "[[parameters('dcrConfig').dataCollectionEndpoint]",
+                  "dataCollectionRuleImmutableId": "[[parameters('dcrConfig').dataCollectionRuleImmutableId]"
+                },
+                "auth": {
+                  "type": "JwtToken",
+                  "userName": {
+                    "key": "client_id",
+                    "value": "[[parameters('clientId')]"
+                  },
+                  "password": {
+                    "key": "client_secret",
+                    "value": "[[parameters('clientSecret')]"
+                  },
+                  "TokenEndpoint": "[[concat(variables('normalizedUrlStub'), '/oauth2/token')]",
+                  "Headers": {
+                    "Accept": "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                  },
+                  "IsCredentialsInHeaders": false,
+                  "IsJsonRequest": false,
+                  "JwtTokenJsonPath": "$.access_token",
+                  "RequestTimeoutInSeconds": 60
+                },
+                "request": {
+                  "apiEndpoint": "[[concat(variables('normalizedUrlStub'), '/audit/events')]",
+                  "httpMethod": "GET",
+                  "queryWindowInMin": 5,
+                  "queryTimeFormat": "yyyy-MM-dd_HH-mm-ss",
+                  "startTimeAttributeName": "timefrom",
+                  "endTimeAttributeName": "timeto",
+                  "retryCount": 3,
+                  "timeoutInSeconds": 60,
+                  "rateLimitQPS": 1,
+                  "paginatedCallsPerSecond": 0.5,
+                  "headers": {
+                    "Accept": "application/json",
+                    "User-Agent": "Microsoft-Sentinel-CCF-Action1-v1"
+                  }
+                },
+                "response": {
+                  "eventsJsonPaths": [
+                    "$.items"
+                  ],
+                  "format": "json"
+                },
+                "paging": {
+                  "pagingType": "LinkHeader",
+                  "linkHeaderTokenJsonPath": "$.next_page",
+                  "pageSizeParameterName": "limit",
+                  "pageSize": 500,
+                  "pagingInfoPlacement": "QueryString"
+                },
+                "isActive": true
+              }
+            }
+          ]
+        },
+        "packageKind": "Solution",
+        "packageVersion": "[variables('solutionVersion')]",
+        "packageName": "Action1 Audit Events CCF v2",
+        "contentProductId": "[variables('connectionContentProductId')]",
+        "packageId": "[variables('solutionId')]",
+        "contentSchemaVersion": "3.0.0",
+        "version": "[variables('connectorVersion')]"
+      }
+    }
+  ],
+  "outputs": {
+    "solutionId": {
+      "type": "string",
+      "value": "[variables('solutionId')]"
+    },
+    "connectorDefinitionId": {
+      "type": "string",
+      "value": "[variables('definitionContentId')]"
+    },
+    "connectionContentId": {
+       "type": "string",
+      "value": "[variables('connectionContentId')]"
+    },
+    "tableName": {
+      "type": "string",
+      "value": "[variables('tableName')]"
+    },
+    "dceName": {
+      "type": "string",
+      "value": "[variables('dceName')]"
+    },
+    "dcrName": {
+      "type": "string",
+      "value": "[variables('dcrName')]"
+    }
+  }
+}
