@@ -2,5 +2,23 @@
 A community built Sentinel solution for the Action1 patch management platform.
 
 
-Testing PR
-Testing a second line
+# azuredeploy_Action1_CCF_complete_v1.0.2.json
+This monolithic ARM template will deploy the following resources:
+
+- DCE (Data collection endpoint). A DCE is mandatory for any CCF connector. While the content hub deployed connectors will all use a common DCE that's deployed with the first connector, this solution creates its own as an Azure resource.
+
+- DCR (Cata collection rule). The DCR defines the incoming data stream, and in this case defines the ingestion time parsing that is done to extract the individual values from the JSON provided by the API. Those values are then mapped to specific table fields. The DCR processess on record at a time.
+
+- Custom table. The custom table is of the V2 variety, making it Sentinel Data Lake compliant. The schema has been derived from a sample of 1,000 audit log events. It may not be perfect - if you see any issues please create a PR with updated assets.
+
+- CCF data connector interface. This is the "Data Connectors" item in the Sentinel menu, used to visually monitor data 
+connector status, and to perform initial configuration.
+
+Deploy to Azure using the "Deploy a Custom Template" tile. During deployment you will be prompted for your Sentinel Log Analytics Workspace name, and the region name. After deployment, you are required to enter the API URL stub for your Action1 region, your API User and API Key.
+
+Future planned updates:
+
+- Threat model, use cases, and detections.
+- Additional data connector to ingest automation activity (audit logs appear to be human activity only)
+- SOAR automations to isolate resources or users on high-confidence security detection
+- MCP server and skills/agent definition for semi-autonomous patch and vulnerability management
