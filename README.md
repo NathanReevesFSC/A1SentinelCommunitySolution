@@ -29,6 +29,7 @@ Deploy to Azure using the "Deploy a Custom Template" tile. During deployment you
 
 # Future planned updates:
 
+- Additional ingestion pipeline for diganostic logs, to cover automation activity etc.
 - Threat model, use cases, and detections.
 - Additional data connector to ingest automation activity (audit logs appear to be human activity only)
 - SOAR automations to isolate resources or users on high-confidence security detection
