@@ -24,9 +24,7 @@ Deploy to Azure using the "Deploy a Custom Template" tile. During deployment you
 4. Paste the JSON data into the text box and accept
 5. Enter the required variables (Sentinel LA Workspace name, and region)
 6. After installation, navigate to Sentinel Data Connectors
-7. Open the Action1 data connector, enter the stub URL for the region of your instance, and enter the Client ID and Client Secret of an API Credentials user who holds the Enterprise Viewer role.
-
-
+7. Open the Action1 data connector, enter the stub URL for the region of your instance, and enter the Client ID and Client Secret of an API Credentials user who holds the permission View Audit Trail (as a custom role).
 
 
 # Future planned updates:
