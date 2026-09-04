@@ -22,3 +22,10 @@ Future planned updates:
 - Additional data connector to ingest automation activity (audit logs appear to be human activity only)
 - SOAR automations to isolate resources or users on high-confidence security detection
 - MCP server and skills/agent definition for semi-autonomous patch and vulnerability management
+
+
+#Disclaimer
+
+This is an independent, community-developed project. I am not affiliated with, endorsed by, or representing Action1 or Microsoft.
+The project is provided free of charge and “as is,” without warranty or guaranteed support. I built it as a self-directed security engineering project and have made it available for anyone who may find it useful.
+If it works for you, that makes me happy. If it doesn’t, I’d genuinely appreciate hearing about the problem so I can learn from it and, where possible, work toward a fix.
