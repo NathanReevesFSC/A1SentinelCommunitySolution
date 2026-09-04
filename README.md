@@ -16,7 +16,20 @@ connector status, and to perform initial configuration.
 
 Deploy to Azure using the "Deploy a Custom Template" tile. During deployment you will be prompted for your Sentinel Log Analytics Workspace name, and the region name. After deployment, you are required to enter the API URL stub for your Action1 region, your API User and API Key.
 
-Future planned updates:
+# Installation instructions
+
+1. Copy the JSON content
+2. Navigate in Azure to "Deploy a custom template"
+3. Click "Custom template from a file"
+4. Paste the JSON data into the text box and accept
+5. Enter the required variables (Sentinel LA Workspace name, and region)
+6. After installation, navigate to Sentinel Data Connectors
+7. Open the Action1 data connector, enter the stub URL for the region of your instance, and enter the Client ID and Client Secret of an API Credentials user who holds the Enterprise Viewer role.
+
+
+
+
+# Future planned updates:
 
 - Threat model, use cases, and detections.
 - Additional data connector to ingest automation activity (audit logs appear to be human activity only)
@@ -24,7 +37,7 @@ Future planned updates:
 - MCP server and skills/agent definition for semi-autonomous patch and vulnerability management
 
 
-#Disclaimer
+# Disclaimer
 
 This is an independent, community-developed project. I am not affiliated with, endorsed by, or representing Action1 or Microsoft.
 The project is provided free of charge and “as is,” without warranty or guaranteed support. I built it as a self-directed security engineering project and have made it available for anyone who may find it useful.
